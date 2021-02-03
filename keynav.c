@@ -44,6 +44,7 @@ char **g_argv;
 
 struct appstate {
   int active;
+  int run_once;
   int dragging;
   int need_draw;
   int need_moveresize;
@@ -119,6 +120,7 @@ static cairo_t *shape_cairo;
 static xdo_t *xdo;
 static struct appstate appstate = {
   .active = 0,
+  .run_once = 0,
   .dragging = 0,
   .recording = record_off,
   .grid_nav = 0,
@@ -162,6 +164,7 @@ void cmd_shell(char *args);
 void cmd_start(char *args);
 void cmd_warp(char *args);
 void cmd_windowzoom(char *args);
+void cmd_once(char *args);
 
 void update();
 void correct_overflow();
@@ -234,6 +237,9 @@ dispatch_t dispatch[] = {
   "restart", cmd_restart,
   "record", cmd_record,
   "playback", cmd_playback,
+
+  /* Exit after end */
+  "once", cmd_once,
   NULL, NULL,
 };
 
@@ -1376,6 +1382,10 @@ void cmd_record(char *args) {
   }
 }
 
+void cmd_once(char *args) {
+  appstate.run_once = 1;
+}
+
 void update() {
   if (!ISACTIVE)
     return;
@@ -2069,7 +2079,7 @@ int main(int argc, char **argv) {
     is_daemon = True;
   }
 
-  while (1) {
+  while (appstate.run_once ? ISACTIVE : 1) {
     XEvent e;
     XNextEvent(dpy, &e);
 
