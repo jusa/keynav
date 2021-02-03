@@ -1002,6 +1002,8 @@ void cmd_end(char *args) {
     cmd_record(NULL);
   }
 
+  /* Workaround - sleep a bit after end event to avoid dragging effect. */
+  usleep(5000);
   appstate.active = False;
 
   //XDestroyWindow(dpy, zone);
@@ -1198,9 +1200,11 @@ void cmd_click(char *args) {
 
   int button;
   button = atoi(args);
-  if (button > 0)
+  if (button > 0) {
     xdo_click_window(xdo, CURRENTWINDOW, button);
-  else
+    /* Workaround - sleep a bit after click to avoid dragging effect. */
+    usleep(5000);
+  } else
     fprintf(stderr, "Negative mouse button is invalid: %d\n", button);
 }
 
