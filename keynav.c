@@ -132,6 +132,8 @@ static char drag_modkeys[128];
 static wininfo_t wininfo_history[WININFO_MAXHIST]; /* XXX: is 100 enough? */
 static int wininfo_history_cursor = 0;
 
+static int keynav_once = 0;
+
 void defaults();
 
 void cmd_cell_select(char *args);
@@ -162,6 +164,7 @@ void cmd_shell(char *args);
 void cmd_start(char *args);
 void cmd_warp(char *args);
 void cmd_windowzoom(char *args);
+void cmd_once(char *args);
 
 void update();
 void correct_overflow();
@@ -234,6 +237,9 @@ dispatch_t dispatch[] = {
   "restart", cmd_restart,
   "record", cmd_record,
   "playback", cmd_playback,
+
+  /* Exit after end */
+  "once", cmd_once,
   NULL, NULL,
 };
 
@@ -1380,6 +1386,10 @@ void cmd_record(char *args) {
   }
 }
 
+void cmd_once(char *args) {
+  keynav_once = 1;
+}
+
 void update() {
   if (!ISACTIVE)
     return;
@@ -2073,7 +2083,7 @@ int main(int argc, char **argv) {
     is_daemon = True;
   }
 
-  while (1) {
+  while (keynav_once ? ISACTIVE : 1) {
     XEvent e;
     XNextEvent(dpy, &e);
 
