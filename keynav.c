@@ -49,6 +49,7 @@ struct appstate {
   int need_moveresize;
   enum { record_getkey, record_ing, record_off } recording;
   int playback;
+  int skip_history;
 
   int grid_nav; /* 1 if grid nav is active */
   enum { GRID_NAV_COL, GRID_NAV_ROW } grid_nav_state;
@@ -122,6 +123,7 @@ static struct appstate appstate = {
   .dragging = 0,
   .recording = record_off,
   .grid_nav = 0,
+  .skip_history = 0,
 };
 
 static int drag_button = 0;
@@ -149,6 +151,7 @@ void cmd_toggle_start(char *args);
 void cmd_grid(char *args);
 void cmd_grid_nav(char *args);
 void cmd_history_back(char *args);
+void cmd_skip_history(char *args);
 void cmd_loadconfig(char *args);
 void cmd_move_down(char *args);
 void cmd_move_left(char *args);
@@ -230,6 +233,7 @@ dispatch_t dispatch[] = {
   "end", cmd_end,
   "toggle-start", cmd_toggle_start,
   "history-back", cmd_history_back,
+  "skip_history", cmd_skip_history,
   "quit", cmd_quit,
   "restart", cmd_restart,
   "record", cmd_record,
@@ -1034,6 +1038,13 @@ void cmd_history_back(char *args) {
   restore_history_point(1);
 }
 
+void cmd_skip_history(char *args) {
+  if (!ISACTIVE)
+    return;
+
+  appstate.skip_history = 1;
+}
+
 void cmd_loadconfig(char *args) {
   // Trim leading and trailing quotes if they exist
   if (*args == '"') {
@@ -1757,6 +1768,11 @@ void handle_commands(char *commands) {
 }
 
 void save_history_point() {
+  if (appstate.skip_history) {
+    appstate.skip_history = 0;
+    return;
+  }
+
   /* If the history is full, drop the oldest entry */
   while (wininfo_history_cursor >= WININFO_MAXHIST) {
     int i;
