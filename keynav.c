@@ -394,7 +394,10 @@ void addbinding(int keycode, int mods, char *commands) {
     if (path != NULL && path[0] != '\0') {
       /* Handle ~/ swapping in for actual homedir */
       if (!strncmp(path, "~/", 2)) {
-        asprintf(&newrecordingpath, "%s/%s", getenv("HOME"), path + 2);
+        if (asprintf(&newrecordingpath, "%s/%s", getenv("HOME"), path + 2) < 0) {
+          fprintf(stderr, "Failed to asprintf\n");
+          exit(EXIT_FAILURE);
+        }
       } else {
         newrecordingpath = strdup(path);
       }
@@ -427,7 +430,10 @@ void parse_config_file(const char* file) {
 
     if (homedir != NULL) {
       char *rcfile = NULL;
-      asprintf(&rcfile, "%s/%s", homedir, file + 1 /* skip first char '~' */);
+      if (asprintf(&rcfile, "%s/%s", homedir, file + 1 /* skip first char '~' */) < 0) {
+        fprintf(stderr, "Failed to asprintf\n");
+        exit(EXIT_FAILURE);
+      }
       parse_config_file(rcfile);
       free(rcfile);
       return;
@@ -2065,7 +2071,10 @@ int main(int argc, char **argv) {
 
   if (daemonize) {
     printf("Daemonizing now...\n");
-    daemon(0, 0);
+    if (daemon(0, 0) < 0) {
+      fprintf(stderr, "Failed to daemonize: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
     is_daemon = True;
   }
 
